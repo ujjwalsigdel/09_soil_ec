@@ -155,13 +155,14 @@ eca30_map
 
 ## eca90  
 ```{r eca90_idw_mod}
-eca90_idw_mod 
+eca90_idw_mod <- gstat(formula = eca90_dsm ~ 1,
+                       data = eca_w)
 
 eca90_idw_mod
 ```
 
 ```{r eca90_idw_pred}
-eca90_idw_pred  
+eca90_idw_pred <- predict(eca90_idw_mod, grid_r)
 
 eca90_idw_pred
 ```
@@ -188,7 +189,11 @@ ggsave("../output/soileca.png",
 
 # Grid extraction  
 ```{r eca30_v}
-eca30_v 
+eca30_v <- eca30_idw_pred %>% 
+  st_as_sf(as_points = F, #if F is not done, by default it is true, and it will give the centroids
+           merge = F) %>% 
+  dplyr::select(eca30_dsm = var1.pred)
+eca30_v
 ```
 
 
@@ -203,7 +208,10 @@ eca90_v
 
 # Merging eca layers  
 ```{r eca_v }
-eca_v 
+eca_v <- eca30_v %>% 
+  st_join(eca90_v,
+          join = st_equals,
+          left = T)
 
 eca_v
 ```
@@ -211,7 +219,9 @@ eca_v
 # Exporting  
 Exporting to file to use later for management zone creation.  
 ```{r exporting}
-
+write_sf(eca_v,
+         "../data/eca_v.geojson",
+         delete_dsn = T)
 
 ```
 
